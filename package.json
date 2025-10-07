@@ -1,0 +1,23 @@
+{
+  "name": "bun-hono",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/server.ts"
+  },
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.31.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.7.3",
+    "@libsql/client": "^0.15.15",
+    "drizzle-orm": "^0.44.6",
+    "hono": "^4.9.10",
+    "zod": "^4.1.11"
+  }
+}
