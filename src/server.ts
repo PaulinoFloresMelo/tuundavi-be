@@ -27,6 +27,6 @@ app.route('/api/v1/terms', termRouter)
 app.get('/', (c) => c.text('Hello Bun!'));
 
 export default { 
-  port: process.env.PORT||300, 
+  port: process.env.PORT||3000, 
   fetch: app.fetch, 
 } 

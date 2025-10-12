@@ -4,7 +4,7 @@ import { z } from "zod";
 import { eq } from 'drizzle-orm';
 import { db } from '../db/index';
 import { zValidator } from '@hono/zod-validator';
-import { imagesTable, termsTable } from "../db/schema";
+import { termsTable } from "../db/schema";
 
 export const termRouter = new Hono();
 
@@ -13,28 +13,75 @@ if (!process.env.JWT_SECRET){
 }
 
 const registerTermSchema = z.object({
-    content: z.string().toLowerCase(),
+    content: z.string().trim().toLowerCase(),
+    imageUrl: z.string().trim().toLowerCase(),
+    audioUrl: z.string().trim().toLowerCase(),
+    example: z.string().trim().toLowerCase(),
+    userId: z.number(),
 })
 
-const registerImageSchema = z.object({
-    url: z.string().toLowerCase(),
-    termId: z.number(),
-})
+
+// // /api/v1/terms
+// termRouter.get(
+//     "/",
+//     jwt({secret: process.env.JWT_SECRET}),
+//     async (c) => {
+//         const payload = c.get("jwtPayload") 
+//         return c.json({ message: "Hello world posts", payload })
+// });
 
 // /api/v1/terms
 termRouter.get(
     "/",
-    jwt({secret: process.env.JWT_SECRET}),
-    async (c) => {
-        const payload = c.get("jwtPayload") 
-        return c.json({ message: "Hello world posts", payload })
+    async(c) => {
+    const terms = await db
+    .select()
+    .from(termsTable)
+    .limit(3);
+
+    return c.json({terms})
 });
+// /api/v1/terms/images
+termRouter.get(
+    "/:image",
+    async(c) => {
+
+        const nameImage = c.req.param('image')
+        const image = await Bun.file(`src/static/images/${nameImage}`)
+        return new Response(image, {
+            headers: {
+            'Content-Type': 'image/jpeg',
+            'Cache-Control': 'public, max-age=86400' // Cache por 1 día
+            }
+        })
+    }
+)
+
+// /api/v1/terms/:id
+termRouter.get(
+    "/:id",
+    async(c) => {
+        const id = c.req.param('id')
+        
+        const term = await db
+        .select()
+        .from(termsTable)
+        .where(eq(termsTable.id, parseInt(id)))
+
+        return c.json({term})
+}
+);
 
 // /api/v1/terms/term-register
 termRouter.post("/term-register", zValidator("json", registerTermSchema),
     async(c) => {
     
-    const { content, userId } = await c.req.json();
+    const { 
+        content, 
+        imageUrl,
+        audioUrl,
+        example,
+        userId,  } = await c.req.json();
 
     const [term] = await db
     .select()
@@ -47,39 +94,20 @@ termRouter.post("/term-register", zValidator("json", registerTermSchema),
 
     const newTerm = await db.insert(termsTable).values({
         content: content,
-        userId,
+        imageUrl: imageUrl,
+        audioUrl: audioUrl,
+        example: example,
+        userId: userId,
     }).returning({
         id: termsTable.id,
         content: termsTable.content,
+        imageUrl: termsTable.imageUrl,
+        audioUrl: termsTable.audioUrl,
+        example: termsTable.example,
+        userId: termsTable.userId,
     })
 
     return c.json({newTerm})
 })
 
-
-// /api/v1/terms/image-register
-termRouter.post("/image-register", zValidator("json", registerImageSchema),
-    async(c) => {
-    
-    const { url, termId } = await c.req.json();
-
-    const [term] = await db
-    .select()
-    .from(termsTable)
-    .where( eq(termsTable.id, termId) )
-
-    if (!term) {
-        return c.json({ message: "No term" }, 400)
-    }
-
-    const newImage = await db.insert(imagesTable).values({
-        url: url,
-        termId: termId 
-    }).returning({
-        url: imagesTable.url,
-        termId,
-    })
-
-    return c.json({newImage})
-})
 export default termRouter;
