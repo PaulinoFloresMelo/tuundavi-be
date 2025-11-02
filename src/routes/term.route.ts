@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db/index';
 import { zValidator } from '@hono/zod-validator';
 import { termsTable } from "../db/schema";
+import { readFile } from 'fs/promises'
 
 export const termRouter = new Hono();
 
@@ -21,15 +22,6 @@ const registerTermSchema = z.object({
 })
 
 
-// // /api/v1/terms
-// termRouter.get(
-//     "/",
-//     jwt({secret: process.env.JWT_SECRET}),
-//     async (c) => {
-//         const payload = c.get("jwtPayload") 
-//         return c.json({ message: "Hello world posts", payload })
-// });
-
 // /api/v1/terms
 termRouter.get(
     "/",
@@ -41,21 +33,7 @@ termRouter.get(
 
     return c.json({terms})
 });
-// /api/v1/terms/images
-termRouter.get(
-    "/:image",
-    async(c) => {
 
-        const nameImage = c.req.param('image')
-        const image = await Bun.file(`src/static/images/${nameImage}`)
-        return new Response(image, {
-            headers: {
-            'Content-Type': 'image/jpeg',
-            'Cache-Control': 'public, max-age=86400' // Cache por 1 día
-            }
-        })
-    }
-)
 
 // /api/v1/terms/:id
 termRouter.get(
@@ -68,9 +46,8 @@ termRouter.get(
         .from(termsTable)
         .where(eq(termsTable.id, parseInt(id)))
 
-        return c.json({term})
-}
-);
+        return c.json(term[0])
+});
 
 // /api/v1/terms/term-register
 termRouter.post("/term-register", zValidator("json", registerTermSchema),

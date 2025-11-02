@@ -4,6 +4,7 @@ import { termRouter } from './routes/term.route';
 import { cors } from 'hono/cors'
 
 import type { JwtVariables } from 'hono/jwt';
+import imageRouter from './routes/image.route';
 
 type Variables = JwtVariables
 
@@ -19,6 +20,7 @@ app.use('/api/*', cors({
 
 app.route('/api/v1/auth', authRouter)
 app.route('/api/v1/terms', termRouter)
+app.route('/api/v1/images', imageRouter)
 
 
 // Habilitar CORS para todas las rutas con todos los orígenes, métodos y encabezados
