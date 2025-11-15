@@ -1,11 +1,9 @@
 import { Hono } from "hono";
-import { jwt } from 'hono/jwt';
 import { z } from "zod";
 import { eq } from 'drizzle-orm';
 import { db } from '../db/index';
 import { zValidator } from '@hono/zod-validator';
 import { termsTable } from "../db/schema";
-import { readFile } from 'fs/promises'
 
 export const termRouter = new Hono();
 

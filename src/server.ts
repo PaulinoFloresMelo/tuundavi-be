@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { authRouter } from './routes/auth.route'
 import { termRouter } from './routes/term.route';
-import { cors } from 'hono/cors'
+import { cors } from 'hono/cors';
 
 import type { JwtVariables } from 'hono/jwt';
 import imageRouter from './routes/image.route';

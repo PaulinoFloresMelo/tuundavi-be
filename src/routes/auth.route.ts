@@ -4,7 +4,7 @@ import { zValidator } from '@hono/zod-validator';
 import { db } from '../db/index';
 import { usersTable } from '../db/schema';
 import { eq } from 'drizzle-orm';
-import { sign } from 'hono/jwt'
+import { sign, verify } from 'hono/jwt'
 
 
 if (!process.env.JWT_SECRET){
@@ -12,6 +12,7 @@ if (!process.env.JWT_SECRET){
 }
 
 export const authRouter = new Hono();
+
 const loginSchema = z.object({
     email: z.string().trim().toLowerCase().email({
         message: "invalid email address"
@@ -43,6 +44,7 @@ authRouter.post("/login", zValidator("json", loginSchema),
     .select()
     .from(usersTable)
     .where( eq(usersTable.email, email) )
+
     
     if ( !user ) {
         return c.json({message: "Credentials invalid"}, 404 )
@@ -59,10 +61,12 @@ authRouter.post("/login", zValidator("json", loginSchema),
         email: user.email,
         exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // a day
     }
-    const secret = process.env.JWT_SECRET as string;
-    const token = await sign(payload, secret)
+    const secretKey = process.env.JWT_SECRET as string;
+    const token = await sign(payload, secretKey)
 
-    return c.json({ user: user.id, email: user.email, token })
+    const userResponse = {email:user.email, userId: user.id};
+
+    return c.json({ user: userResponse, token })
 })
 
 // /api/v1/auth/register
@@ -100,5 +104,41 @@ authRouter.post("/register", zValidator("json", registerSchema),
 
     return c.json({newUser})
 })
+
+// /api/v1/auth/check-status
+authRouter.get("/check-status",
+    async(c) => {
+    
+    const tokenToVerify = await c.req.header('Authorization')?.replace('Bearer ', '');
+
+    if (!tokenToVerify) {
+    return c.json({ error: 'Token no proporcionado' }, 401);
+    }
+
+    const secretKey = process.env.JWT_SECRET as string;
+    const decodedPayload = await verify(tokenToVerify, secretKey)
+    const emailToFind = decodedPayload.email as string;
+    
+    const [user] = await db
+    .select()
+    .from(usersTable)
+    .where( eq(usersTable.email, emailToFind) )
+    
+    if ( !user ) {
+        return c.json({message: "Credentials invalid"}, 404 )
+    }
+
+    const userResponse = {email:user.email, userId: user.id};
+    
+    const payload = {
+        id: user.id, 
+        email: user.email,
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // a day
+    }
+    const token = await sign(payload, secretKey)
+
+    return c.json({ user: userResponse, token }) 
+})
+
 
 export default authRouter;
