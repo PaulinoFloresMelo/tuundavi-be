@@ -74,9 +74,9 @@ authRouter.post("/register", zValidator("json", registerSchema),
     async(c) => {
     
     const {
-        email, 
-        password, 
-        firstName, 
+        email,
+        password,
+        firstName,
         paternalName,
         maternalName} = await c.req.json();
 
