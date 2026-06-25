@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "63599e3d-d885-4ac1-ae72-86dbd744668c",
+  "id": "30995a12-46a0-436c-aa3f-bdef79007e81",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "terms": {
@@ -37,6 +37,13 @@
         },
         "example": {
           "name": "example",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "category": {
+          "name": "category",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
